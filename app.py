@@ -18,7 +18,7 @@ def show_current_weather(city, temperature, sensation, humidity, condition, cond
         st.subheader(f"Weather in {city}:")
     with col2:
         st.image(f"https:{condition_icon}")
-    st.write(f"Temperatura: {temperature}")
+    st.write(f"Temperature: {temperature}")
     st.write(f"Feels like: {sensation}")
     st.write(f"Humidity: {humidity}")
     st.write(f"Condition: {condition}")
