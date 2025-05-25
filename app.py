@@ -1,5 +1,6 @@
 import streamlit as st
 from api_client import get_current_weather, get_next_days_weather
+import pandas as pd
 
 css = """
 .st-emotion-cache-1w723zb {
@@ -8,6 +9,19 @@ css = """
 """
 
 st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+
+@st.dialog("Current Weather")
+def show_current_weather(city, temperature, sensation, humidity, condition, condition_icon):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(" ")
+        st.subheader(f"Weather in {city}:")
+    with col2:
+        st.image(f"https:{condition_icon}")
+    st.write(f"Temperatura: {temperature}")
+    st.write(f"Feels like: {sensation}")
+    st.write(f"Humidity: {humidity}")
+    st.write(f"Condition: {condition}")
 
 st.title("Weather Tracker :earth_asia:")
 
@@ -18,7 +32,16 @@ days = st.number_input(label="Days forecast you want to search", min_value=0, ma
 if st.button(label="Check Weather"):
     if city != "" and days == 0:
         response = get_current_weather(city)
-        st.write(response)
+
+        temperature = response["current"]["temp_c"]
+        sensation = response["current"]["feelslike_c"]
+        humidity = response["current"]["humidity"]
+        condition = response["current"]["condition"]["text"]
+        condition_icon = response["current"]["condition"]["icon"]
+
+        show_current_weather(city, temperature, sensation, humidity, condition, condition_icon)
+        
+        
     elif city != "" and days > 0:
         response = get_next_days_weather(city, days)
         st.write(response)
