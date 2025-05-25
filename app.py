@@ -1,8 +1,10 @@
 import streamlit as st
 from api_client import get_current_weather, get_next_days_weather
+from database import check_if_exists, insert_to_SQL
 import pandas as pd
+from datetime import date
 
-css = """
+css = """s
 .st-emotion-cache-1w723zb {
     max-width: 1250px;
 }
@@ -28,7 +30,7 @@ def show_forecast_weather(city, days_list):
     count = 0
     st.header(f"Weather in {city}:")
     for day in days_list:
-        st.subheader(f"{day["date"]}:")
+        st.subheader(f"{day["current_date"]}:")
         st.write(f"Max Temperature: {day["max_temp"]}")
         st.write(f"Min Temperature: {day["min_temp"]}")
         st.write(f"Condition: {day["condition"]}")
@@ -45,13 +47,32 @@ days = st.number_input(label="Days forecast you want to search", min_value=0, ma
 
 if st.button(label="Check Weather"):
     if city != "" and days == 0:
-        response = get_current_weather(city)
+        current_date = date.today()
+        query_result = check_if_exists(city, current_date) 
 
-        temperature = response["current"]["temp_c"]
-        sensation = response["current"]["feelslike_c"]
-        humidity = response["current"]["humidity"]
-        condition = response["current"]["condition"]["text"]
-        condition_icon = response["current"]["condition"]["icon"]
+        if query_result == []:
+            response = get_current_weather(city)
+
+            current_date = response["location"]["localtime"].split()[0]
+            temperature = response["current"]["temp_c"]
+            sensation = response["current"]["feelslike_c"]
+            humidity = response["current"]["humidity"]
+            condition = response["current"]["condition"]["text"]
+            condition_icon = response["current"]["condition"]["icon"]
+            
+            check = insert_to_SQL(city=city, current_date=current_date, temperature=temperature, sensation=sensation, humidity=humidity, condition=condition, condition_icon=condition_icon)
+            
+            print(f"Inserted on Database: {check}")
+        
+        else:
+            print("Already exists on Database")
+            
+            current_date = query_result[0][2]
+            temperature = query_result[0][3]
+            sensation = query_result[0][4]
+            humidity = query_result[0][5]
+            condition = query_result[0][6]
+            condition_icon = query_result[0][7]
 
         show_current_weather(city, temperature, sensation, humidity, condition, condition_icon)
         
@@ -60,12 +81,12 @@ if st.button(label="Check Weather"):
         response = get_next_days_weather(city, days)
 
         for day in response["forecast"]["forecastday"]:
-            date = day["date"]
+            current_date = day["current_date"]
             max_temp = day["day"]["maxtemp_c"]
             min_temp = day["day"]["mintemp_c"]
             condition = day["day"]["condition"]["text"]
             condition_icon = day["day"]["condition"]["icon"]
-            data.append({"date": date,
+            data.append({"current_date": current_date,
                          "max_temp":max_temp, 
                          "min_temp":min_temp,
                          "condition":condition,
