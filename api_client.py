@@ -19,6 +19,7 @@ def get_current_weather(city):
         return {}
     
 def get_next_days_weather(city, days):
+    days += 1
     response = requests.get(url + f'forecast.json?key={api_key}&q={city}&days={days}&aqi=no&alerts=no')
     if response.status_code == 200:
         return json.loads(response.content)

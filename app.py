@@ -23,6 +23,20 @@ def show_current_weather(city, temperature, sensation, humidity, condition, cond
     st.write(f"Humidity: {humidity}")
     st.write(f"Condition: {condition}")
 
+@st.dialog(f"Forecast")
+def show_forecast_weather(city, days_list):
+    count = 0
+    st.header(f"Weather in {city}:")
+    for day in days_list:
+        st.subheader(f"{day["date"]}:")
+        st.write(f"Max Temperature: {day["max_temp"]}")
+        st.write(f"Min Temperature: {day["min_temp"]}")
+        st.write(f"Condition: {day["condition"]}")
+        st.image(f"https:{day["condition_icon"]}")
+        if count < len(days_list)-1:
+            st.write("------")
+        count += 1  
+
 st.title("Weather Tracker :earth_asia:")
 
 city = st.text_input(label="City:red[*]", placeholder='New York', value="")
@@ -41,9 +55,23 @@ if st.button(label="Check Weather"):
 
         show_current_weather(city, temperature, sensation, humidity, condition, condition_icon)
         
-        
     elif city != "" and days > 0:
+        data = []
         response = get_next_days_weather(city, days)
-        st.write(response)
+
+        for day in response["forecast"]["forecastday"]:
+            date = day["date"]
+            max_temp = day["day"]["maxtemp_c"]
+            min_temp = day["day"]["mintemp_c"]
+            condition = day["day"]["condition"]["text"]
+            condition_icon = day["day"]["condition"]["icon"]
+            data.append({"date": date,
+                         "max_temp":max_temp, 
+                         "min_temp":min_temp,
+                         "condition":condition,
+                         "condition_icon":condition_icon})
+            
+        show_forecast_weather(city, data)
+
     else:
         st.warning("You must fill at least the city field!")
