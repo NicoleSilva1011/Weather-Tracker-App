@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import datetime
 
 db_name = 'weather.db'
 
@@ -13,7 +14,7 @@ def create_db():
         cursor = conn.cursor()
 
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS weather_data (
+            CREATE TABLE IF NOT EXISTS current_weather_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             city TEXT NOT NULL,
             date TEXT NOT NULL,
@@ -22,9 +23,20 @@ def create_db():
             humidity INTEGER,
             condition TEXT,
             condition_icon TEXT,
+            UNIQUE(city, date)
+        );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS forecast_weather_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            city TEXT NOT NULL,
+            date TEXT NOT NULL,
+            condition TEXT,
+            condition_icon TEXT,
             max_temp REAL,
             min_temp REAL,
-            UNIQUE(city, date)
+            UNIQUE(city, date)           
         );
         """)
         conn.commit()
@@ -32,9 +44,15 @@ def create_db():
 
 def insert_to_SQL(city, current_date, condition, condition_icon, temperature=0, sensation=0, humidity=0, max_temp=0, min_temp=0):
     create_db()
-    query = f"""INSERT INTO weather_data (city, date, temperature, sensation, humidity, condition, condition_icon, max_temp, min_temp) 
-    VALUES ('{city}', '{current_date}', {temperature}, {sensation}, {humidity}, '{condition}', '{condition_icon}', {max_temp}, {min_temp});"""
 
+    if max_temp == 0 and min_temp == 0:
+        query = f"""INSERT INTO current_weather_data (city, date, temperature, sensation, humidity, condition, condition_icon) 
+        VALUES ('{city}', '{current_date}', {temperature}, {sensation}, {humidity}, '{condition}', '{condition_icon}');"""
+
+    else:
+        query = f"""INSERT INTO forecast_weather_data (city, date, condition, condition_icon, max_temp, min_temp) 
+        VALUES ('{city}', '{current_date}', '{condition}', '{condition_icon}', {max_temp}, {min_temp});"""
+    
     print(query)
 
     with sqlite3.connect(db_name) as connection:
@@ -46,14 +64,28 @@ def insert_to_SQL(city, current_date, condition, condition_icon, temperature=0, 
             print(e)
             return False
 
-def check_if_exists(city, date):
+def check_if_exists(city, date, days=0):
     create_db()
-    query = """SELECT * FROM weather_data"""
 
-    with sqlite3.connect(db_name) as connection:
-        cursor = connection.cursor()
-        cursor.execute(query)
-        result = cursor.fetchall()
-        print(result)
+    if days == 0:
+        query = f"""SELECT * FROM current_weather_data where city = '{city}' AND date = '{date}'"""
+        with sqlite3.connect(db_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+        return result
+    
+    else:
+        results = []
+        for day in range(days+1):
+            date = date + datetime.timedelta(days=day)
+            query = f"""SELECT * FROM forecast_weather_data where city = '{city}' AND date = '{date}'"""
+            print(query)
 
-    return result
+            with sqlite3.connect(db_name) as connection:
+                cursor = connection.cursor()
+                cursor.execute(query)
+                result = cursor.fetchall()
+                results.append(result)
+
+        return results

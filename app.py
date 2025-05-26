@@ -3,6 +3,7 @@ from api_client import get_current_weather, get_next_days_weather
 from database import check_if_exists, insert_to_SQL
 import pandas as pd
 from datetime import date
+import datetime
 
 css = """s
 .st-emotion-cache-1w723zb {
@@ -46,8 +47,9 @@ city = st.text_input(label="City:red[*]", placeholder='New York', value="")
 days = st.number_input(label="Days forecast you want to search", min_value=0, max_value=3, placeholder=0, help="Let days as 0 if you want to check the weather for today!", value=0)
 
 if st.button(label="Check Weather"):
+    current_date = datetime.date.today()
+    
     if city != "" and days == 0:
-        current_date = date.today()
         query_result = check_if_exists(city, current_date) 
 
         if query_result == []:
@@ -78,19 +80,36 @@ if st.button(label="Check Weather"):
         
     elif city != "" and days > 0:
         data = []
-        response = get_next_days_weather(city, days)
+        query_result = check_if_exists(city, current_date, days)
 
-        for day in response["forecast"]["forecastday"]:
-            current_date = day["current_date"]
-            max_temp = day["day"]["maxtemp_c"]
-            min_temp = day["day"]["mintemp_c"]
-            condition = day["day"]["condition"]["text"]
-            condition_icon = day["day"]["condition"]["icon"]
-            data.append({"current_date": current_date,
-                         "max_temp":max_temp, 
-                         "min_temp":min_temp,
-                         "condition":condition,
-                         "condition_icon":condition_icon})
+        if query_result[0] == []:
+            response = get_next_days_weather(city, days)
+
+            for day in response["forecast"]["forecastday"]:
+                current_date = day["date"]
+                max_temp = day["day"]["maxtemp_c"]
+                min_temp = day["day"]["mintemp_c"]
+                condition = day["day"]["condition"]["text"]
+                condition_icon = day["day"]["condition"]["icon"]
+                data.append({"current_date": current_date,
+                            "max_temp":max_temp, 
+                            "min_temp":min_temp,
+                            "condition":condition,
+                            "condition_icon":condition_icon})
+
+                check = insert_to_SQL(city=city, current_date=current_date, condition=condition, condition_icon=condition_icon, max_temp=max_temp, min_temp=min_temp)
+                print(f"Inserted on Database: {check}")
+                st.write(f"Inserted on Database: {check}")
+
+        else:
+            print("Already exists on Database")
+            
+            for day in query_result:
+                data.append({"current_date": day[0][2],
+                            "max_temp":day[0][5], 
+                            "min_temp":day[0][6],
+                            "condition":day[0][3],
+                            "condition_icon":day[0][4]})
             
         show_forecast_weather(city, data)
 
