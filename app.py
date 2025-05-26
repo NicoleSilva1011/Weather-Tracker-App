@@ -81,8 +81,9 @@ if st.button(label="Check Weather"):
     elif city != "" and days > 0:
         data = []
         query_result = check_if_exists(city, current_date, days)
+        st.write(query_result)
 
-        if query_result[0] == []:
+        if query_result == []:
             response = get_next_days_weather(city, days)
 
             for day in response["forecast"]["forecastday"]:
@@ -97,19 +98,17 @@ if st.button(label="Check Weather"):
                             "condition":condition,
                             "condition_icon":condition_icon})
 
-                check = insert_to_SQL(city=city, current_date=current_date, condition=condition, condition_icon=condition_icon, max_temp=max_temp, min_temp=min_temp)
+                check = insert_to_SQL(city=city, current_date=current_date, condition=condition, condition_icon=condition_icon, days=days, max_temp=max_temp, min_temp=min_temp)
                 print(f"Inserted on Database: {check}")
-                st.write(f"Inserted on Database: {check}")
-
         else:
             print("Already exists on Database")
             
             for day in query_result:
-                data.append({"current_date": day[0][2],
-                            "max_temp":day[0][5], 
-                            "min_temp":day[0][6],
-                            "condition":day[0][3],
-                            "condition_icon":day[0][4]})
+                data.append({"current_date": day[2],
+                            "max_temp":day[5], 
+                            "min_temp":day[6],
+                            "condition":day[3],
+                            "condition_icon":day[4]})
             
         show_forecast_weather(city, data)
 

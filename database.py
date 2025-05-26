@@ -42,10 +42,10 @@ def create_db():
         conn.commit()
         conn.close()
 
-def insert_to_SQL(city, current_date, condition, condition_icon, temperature=0, sensation=0, humidity=0, max_temp=0, min_temp=0):
+def insert_to_SQL(city, current_date, condition, condition_icon, temperature=0, sensation=0, humidity=0, days=0, max_temp=0, min_temp=0):
     create_db()
 
-    if max_temp == 0 and min_temp == 0:
+    if days == 0:
         query = f"""INSERT INTO current_weather_data (city, date, temperature, sensation, humidity, condition, condition_icon) 
         VALUES ('{city}', '{current_date}', {temperature}, {sensation}, {humidity}, '{condition}', '{condition_icon}');"""
 
@@ -69,23 +69,25 @@ def check_if_exists(city, date, days=0):
 
     if days == 0:
         query = f"""SELECT * FROM current_weather_data where city = '{city}' AND date = '{date}'"""
-        with sqlite3.connect(db_name) as connection:
-            cursor = connection.cursor()
-            cursor.execute(query)
-            result = cursor.fetchall()
-        return result
     
     else:
-        results = []
-        for day in range(days+1):
-            date = date + datetime.timedelta(days=day)
-            query = f"""SELECT * FROM forecast_weather_data where city = '{city}' AND date = '{date}'"""
-            print(query)
+        final_date = date + datetime.timedelta(days=days)
+        # query = f"""SELECT * FROM forecast_weather_data where city = '{city}' AND date BETWEEN '{date}' AND '{final_date}' ORDER BY DATE"""
+        query = f"""WITH date_count AS (
+            SELECT COUNT(DISTINCT date) AS cnt
+            FROM forecast_weather_data
+            WHERE city = '{city}' AND date BETWEEN '{date}' AND '{final_date}'
+        )
+        SELECT *
+        FROM forecast_weather_data
+        WHERE city = '{city}' AND date BETWEEN '{date}' AND '{final_date}'
+        AND (SELECT cnt FROM date_count) = ((julianday('{final_date}') - julianday('{date}')) + 1)
+        ORDER BY date;"""
+        print(query)
 
-            with sqlite3.connect(db_name) as connection:
-                cursor = connection.cursor()
-                cursor.execute(query)
-                result = cursor.fetchall()
-                results.append(result)
+    with sqlite3.connect(db_name) as connection:
+        cursor = connection.cursor()
+        cursor.execute(query)
+        result = cursor.fetchall()
 
-        return results
+    return result
