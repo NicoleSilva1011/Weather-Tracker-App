@@ -1,59 +1,59 @@
 # Weather-Tracker-App
-A Python app that uses the OpenWeatherMap API to track current weather and forecasts, store data in a local database, and display interactive charts using Streamlit.
 
-A simple weather forecast application built with Python, Streamlit, and SQLite.
-The app fetches current and forecast weather data from WeatherAPI, caches results in a local database, and displays weather information for any city.
+A Python application that provides current weather and forecast information for up to 3 days using the WeatherAPI. The app features a clean and interactive web interface built with Streamlit and stores weather data locally in an SQLite database to optimize API usage.
 
-Features
-Get current weather for a city
+## Features
 
-Get weather forecast for up to 3 days
+- **Current Weather**: Fetch and display the current weather conditions for any city, including temperature, humidity, and weather description with icons.
+- **Weather Forecast**: Get weather forecasts for up to 3 days, including maximum and minimum temperatures, and conditions.
+- **Local Caching**: Store weather data in an SQLite database to minimize redundant API calls.
+- **Interactive Interface**: Simple and user-friendly interface built with Streamlit.
 
-Cache data locally in SQLite to reduce API calls
+## Requirements
 
-Display weather condition with icons
+- Python 3.8+
+- Dependencies listed in `requirements.txt`
 
-Simple and clean Streamlit web interface
+## Setup
 
-Requirements
-Python 3.8+
+1. **Clone the repository:**
+   ```bash
+   git clone <url>
+   cd Weather-Tracker-App
+   ```
 
-Packages listed in requirements.txt
+2. **Create a `.env` file:**
+   In the project root, create a `.env` file and add your WeatherAPI key:
+   ```env
+   API_KEY=your_weatherapi_key_here
+   ```
 
-Setup
-Clone the repository:
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-bash
-git clone <url>
-cd weather-tracker
+## Running the App
 
-Create a .env file in the project root with your WeatherAPI key:
+1. **Start the Streamlit app:**
+   ```bash
+   streamlit run app.py
+   ```
 
-env
-API_KEY=your_weatherapi_key_here
-Install dependencies:
+2. **Open the app in your browser:**
+   The app will usually be available at [http://localhost:8501](http://localhost:8501).
 
-bash
-pip install -r requirements.txt
-Running the App
-Run the Streamlit app with:
+## Project Structure
 
-bash
-streamlit run app.py
-Open the URL shown in your terminal (usually http://localhost:8501) in your browser.
+- `app.py`: Main Streamlit app script. Handles user input and displays weather data.
+- `api_client.py`: Contains functions to fetch weather data from WeatherAPI.
+- `database.py`: Manages SQLite database creation, data insertion, and queries.
+- `requirements.txt`: Lists all Python dependencies.
+- `weather.db`: SQLite database file for caching weather data.
 
-Project Structure
-app.py: Main Streamlit app script
+## How It Works
 
-api_client.py: Handles calls to WeatherAPI
-
-database.py: SQLite database creation, insertion, and query logic
-
-.env: Environment file containing your API key
-
-Notes
-The forecast supports up to 3 days only (due to API limits)
-
-Data is cached locally in weather.db SQLite file
-
-Please respect WeatherAPI's rate limits to avoid blocked requests
+1. **User Input**: Enter a city name and optionally select the number of forecast days (0-3).
+2. **API Call**: The app fetches data from WeatherAPI using the `api_client.py` module.
+3. **Data Storage**: Weather data is cached in the SQLite database (`weather.db`) using `database.py`.
+4. **Display**: The app displays the weather data in a clean and interactive interface.
